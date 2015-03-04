@@ -3,17 +3,17 @@
  * @method
  * @name {{&className}}#{{&methodName}}
 {{#parameters}}
-{{^isSingleton}} * @param {{=<% %>=}}{<%&type%>}<%={{ }}=%> {{&camelCaseName}} - {{&description}}{{/isSingleton}}
+{{^isSingleton}} * @param {{=<% %>=}}{{<%&type%>}}<%={{ }}=%> {{&camelCaseName}} - {{&description}}{{/isSingleton}}
 {{/parameters}}
  * 
  */
- {{&className}}.prototype.{{&methodName}} = function(parameters){
+ {{&className}}.{{&methodName}} = function(parameters){
     if(parameters === undefined) {
         parameters = {};
     }
     var deferred = {{#isNode}}Q{{/isNode}}{{^isNode}}$q{{/isNode}}.defer();
     
-    var domain = this.domain;
+//    var domain = this.domain;
     var path = '{{&path}}';
     
     var body;

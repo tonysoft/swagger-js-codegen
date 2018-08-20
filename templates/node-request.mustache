@@ -1,9 +1,14 @@
+if (timeout !== undefined) {
+    timeout = parseInt(timeout);
+}
+
 var req = {
     method: '{{method}}',
     uri: domain + path,
     qs: queryParameters,
     headers: headers,
-    body: body
+    body: body,
+    timeout: timeout
 };
 if(Object.keys(form).length > 0) {
     req.form = form;
@@ -11,21 +16,37 @@ if(Object.keys(form).length > 0) {
 if(typeof(body) === 'object') {
     req.json = true;
 }
-request(req, function(error, response, body){
-    if(error) {
-        deferred.reject(error);
-    } else {
-        if(/^application\/(.*\\+)?json/.test(response.headers['content-type'])) {
-            try {
-                body = JSON.parse(body);
-            } catch(e) {
-            
+makeRequest();
+function makeRequest() {
+    if (reqOut) {
+        for(var key in req) {
+            reqOut[key] = req[key];
+        }
+        reqOut.parameters = parameters;
+    }
+    if (upload) {
+        return upload();
+    }
+    request(req, function(error, response, body){
+        if(error) {
+            if ((error.code === "ETIMEDOUT") && (retries > 0)) {
+                retries--;
+                return makeRequest();  // Try again...
+            }
+            deferred.reject(error);
+        } else {
+            if(/^application\/(.*\\+)?json/.test(response.headers['content-type'])) {
+                try {
+                    body = JSON.parse(body);
+                } catch(e) {
+                
+                }
+            }
+            if(response.statusCode >= 200 && response.statusCode <= 299) {
+               deferred.resolve({ response: response, body: body });
+            } else {
+               deferred.reject({ response: response, body: body });
             }
         }
-        if(response.statusCode >= 200 && response.statusCode <= 299) {
-           deferred.resolve({ response: response, body: body });
-        } else {
-           deferred.reject({ response: response, body: body });
-        }
-    }
-});
+    });
+}
